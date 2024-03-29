@@ -1,0 +1,59 @@
+[project]
+name = "pipeedge"
+version = "0.1.1"
+description = "PipeEdge"
+authors = [
+    { "name" = "Yang Hu", "email" = "yhu210003@usc.edu" },
+    { "name" = "Connor Imes", "email" = "cimes@isi.edu" },
+    { "name" = "Haonan Wang", "email" = "haonanwa@usc.edu" },
+]
+readme = "README.md"
+requires-python = ">=3.7"
+license = { "file" = "LICENSE" }
+dependencies = [
+    "apphb>=0.1.0",
+    "energymon>=0.1.0",
+    "networkx>=2.6",
+    "numpy>=1.15.0",
+    "PyYAML",
+    "requests",
+    "scipy",
+    "timm>=0.3.2",
+    "torch>=1.8.0",
+    "transformers>=4.6.0",
+]
+
+[project.optional-dependencies]
+# Required by applications and tools not in the pipeedge package
+runtime = [
+    "datasets>=2.0.0",
+    "Pillow",
+    "psutil",
+    "torchvision>=0.3.0",
+]
+
+[build-system]
+# py-build-cmake isn't particularly stable yet, so we'll use a specific version
+requires = ["py-build-cmake==0.1.8"]
+build-backend = "py_build_cmake.build"
+
+[tool.py-build-cmake.module]
+directory = "src"
+
+[tool.py-build-cmake.sdist]
+include = [
+    "src-native/*",
+]
+
+[tool.py-build-cmake.cmake]
+minimum_version = "3.8"
+build_type = "RelWithDebInfo"
+source_path = "src-native"
+build_args = ["-j"]
+install_components = ["PipeEdge_Runtime"]
+
+[tool.py-build-cmake.editable]
+# See: https://tttapa.github.io/py-build-cmake/Editable-install.html
+# The "wrapper" mode doesn't work with pylint, which is the only external tool we care about
+# The "hook" and "symlink" modes work with pylint, with "hook" being the most portable
+mode = "hook"
