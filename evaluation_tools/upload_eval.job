@@ -6,8 +6,7 @@
 #SBATCH --mem=32GB
 #SBATCH --time=8:00:00
 #SBATCH --account=jpwalter_148
-#SBATCH --mail-type=all
-#SBATCH --mail-user=zeliliu@usc.edu
+
 conda activate primary
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python evaluation.py -q 8,8
+python evaluation.py -b 1 -pt $1 -q $2,$2 
