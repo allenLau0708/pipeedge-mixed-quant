@@ -11,4 +11,4 @@
 #SBATCH --mail-type=all
 #SBATCH --mail-user=zeliliu@usc.edu
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python3 evaluation.py -pt $1 -q $2,$2 
+python3 evaluation.py -q 8,8 
