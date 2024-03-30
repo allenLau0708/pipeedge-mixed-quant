@@ -69,7 +69,7 @@ def _intmap_decode(input_data, orig_shape, m, expbias, bitwidth):
     orgs=signals*(2.0**(exps+expbias))*((mants+0.5)*(2**-m)+1)
     zerosIndex=(exps==0) & (mants==0)
     orgs[zerosIndex]=0.0
-    
+    orgs=orgs[:(orig_shape[0]*orig_shape[1])]
     orgs=np.array(orgs).reshape(orig_shape)
     return orgs
 
