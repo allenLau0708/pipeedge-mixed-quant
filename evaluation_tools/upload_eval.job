@@ -2,11 +2,11 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=128
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=32GB
 #SBATCH --time=8:00:00
 #SBATCH --account=jpwalter_148
 
 conda activate primary
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python evaluation.py -pt $1 -q $2,$2 -n 128
+python evaluation.py -pt $1 -q $2,$2 -n 64
