@@ -2,12 +2,12 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=32
 #SBATCH --mem=32GB
 #SBATCH --time=8:00:00
 #SBATCH --account=jpwalter_148
 #SBATCH --mail-type=all
 #SBATCH --mail-user=zeliliu@usc.edu
-mamba activate primary
+conda activate primary
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python evaluation.py -q 8,8 -st 5
+python evaluation.py -q 8,8
