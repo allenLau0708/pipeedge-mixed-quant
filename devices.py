@@ -3,7 +3,7 @@ from typing import Tuple, Union
 import torch
 
 # The torch.device to use for computation
-DEVICE = None
+DEVICE = "cuda"
 
 def forward_pre_hook_to_device(_module, inputs) \
     -> Union[Tuple[torch.tensor], Tuple[Tuple[torch.Tensor]]]:
