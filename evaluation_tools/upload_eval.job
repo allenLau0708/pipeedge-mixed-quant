@@ -8,4 +8,4 @@
 #SBATCH --account=jpwalter_148
 
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python evaluation.py -pt $1 -q $2,$2
+python evaluation.py -pt $1 -q $2,$2 -n 32
