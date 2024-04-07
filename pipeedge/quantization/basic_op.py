@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 def _quant_op(input_data, bit, mode='original'):
-    e=int(bit/2)
+    e=1
     m=bit-e-1
     sign=np.sign(input_data).flatten()
     sign=np.where(sign>=0,0,1)
@@ -25,7 +25,7 @@ def _quant_op(input_data, bit, mode='original'):
     return m,expbias,int_map
 
 
-def _intmap_encode(int_map, bitwidth):
+def _intmap_encode(int_map, bitwidth,m):
     """ compress the converted int_map to tesnor with fewer numbers"""
     # the int_map is assumed as a 4- or 3-dimensional np.array [b(optional),c,h,w]
     int_map = int_map.flatten()
@@ -36,8 +36,8 @@ def _intmap_encode(int_map, bitwidth):
     int_map_ext = np.append(int_map,
                             np.repeat(0, (enc_ratio - len(int_map) % enc_ratio) % enc_ratio))
     int_map_rs = np.reshape(int_map_ext, (-1, enc_ratio))
-    e=int(bitwidth/2)
-    m=bitwidth-e-1
+    m=int(m)
+    e=int(bitwidth-m-1)
     
     bitshift = np.tile(np.array([0, 1, e + 1]), enc_ratio // 3) + np.repeat(np.arange(0, enc_ratio//3), 3) * bitwidth
     int_map_shifted = np.left_shift(int_map_rs, bitshift)
@@ -117,7 +117,8 @@ def tensor_encode(input_data: torch.Tensor, quant_bit: int) -> List[torch.Tensor
     
     # quant
     m, expbias, int_map = _quant_op(input_data, quant_bit)
-    comm_tensor = _intmap_encode(int_map, quant_bit)
+    assert 0<=m<=quant_bit-1
+    comm_tensor = _intmap_encode(int_map, quant_bit,m)
     # split uint32 into 4 uint8
     comm_tensor = _uint32_to_uint8(comm_tensor)
     # convert array to tensor for p2p communication
