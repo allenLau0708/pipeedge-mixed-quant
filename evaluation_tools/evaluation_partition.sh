@@ -11,8 +11,7 @@ generatePartition(){
 
 # sbatch upload_eval.job 1,47,48,96 0
 
-# for bit in 2 4 6 8 16
-for bit in 16
+for bit in 2 4 6 8 16
 do
 	# ViT Base [1,47]
 	for pt in `seq 1 47`
