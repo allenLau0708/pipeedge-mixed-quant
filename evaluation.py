@@ -176,6 +176,13 @@ if __name__ == "__main__":
                            "'ILSVRC2012_img_train.tar', 'ILSVRC2012_img_val.tar'")
     dset.add_argument("--dataset-split", default='ILSVRC2012_img_val/', type=str,
                       help="dataset split (depends on dataset), e.g.: train, val, validation, test")
+    # In discovery, use the below commented code, you dont need to dowanload the dataset to the discovery.
+    # dset.add_argument("--dataset-root", type=str, default= "/project/jpwalter_148/hnwang/datasets/ImageNet/",
+    #                   help="dataset root directory (e.g., for 'ImageNet', must contain "
+    #                        "'ILSVRC2012_devkit_t12.tar.gz' and at least one of: "
+    #                        "'ILSVRC2012_img_train.tar', 'ILSVRC2012_img_val.tar'")
+    # dset.add_argument("--dataset-split", default='val', type=str,
+    #                   help="dataset split (depends on dataset), e.g.: train, val, validation, test")
     dset.add_argument("--dataset-indices-file", default=None, type=str,
                       help="PyTorch or NumPy file with precomputed dataset index sequence")
     dset.add_argument("--dataset-shuffle", type=bool, nargs='?', const=True, default=False,
