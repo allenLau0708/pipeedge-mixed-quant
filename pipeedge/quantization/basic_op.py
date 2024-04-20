@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 def _quant_op(input_data, bit, mode='original'):
-    e=13
+    e=14
     m=bit-e-1
     sign=np.sign(input_data).flatten()
     sign=np.where(sign>=0,0,1)
