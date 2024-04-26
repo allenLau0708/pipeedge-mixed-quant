@@ -32,7 +32,7 @@ class ReportAccuracy():
 
     def report(self,):
         print(f"The accuracy so far is: {100*self.total_acc:.2f}")
-        file_name = os.path.join(self.output_dir, self.model_name, "result_"+self.partition+"_"+str(self.quant)+".txt")
+        file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_float_e=_noClamp_{self.partition[1]}.txt")
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'a') as f:
             f.write(f"{100*self.total_acc:.2f}\n")
@@ -123,7 +123,7 @@ def evaluation(args):
 
     # run inference
     start_time = time.time()
-    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, partition, stage_quant[0])
+    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, parts, stage_quant[0])
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(val_loader):
             if batch_idx == num_stop_batch and num_stop_batch:
