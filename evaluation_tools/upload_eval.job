@@ -9,4 +9,4 @@
 
 # conda activate primary
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
-python evaluation.py -n 32 -pt $1 -q $2,$2
+python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m google/vit-large-patch16-224

@@ -77,6 +77,8 @@ def forward_hook_quant_encode(module, _input_arg, output: Union[torch.Tensor, Tu
         output = (output,)
     assert isinstance(output, tuple)
     quant_bit = module.quant_bit.item()
+    e_bit=module.e_bit.item()
+    assert 0<=e_bit<=quant_bit-1
     comm_tuple = []
     for tensor in output:
         assert isinstance(tensor, torch.Tensor)
@@ -84,7 +86,7 @@ def forward_hook_quant_encode(module, _input_arg, output: Union[torch.Tensor, Tu
         # if quant_bit > 0:
         #     clamp = clamp_banner2019_laplace if tensor.min() < 0.2 else clamp_banner2019_gelu
         #     tensor = clamp(tensor, quant_bit)
-        stacked_tensor = tensor_encode_outerdim(tensor, quant_bit)
+        stacked_tensor = tensor_encode_outerdim(tensor, quant_bit,e_bit)
         comm_tuple += stacked_tensor
     # Measure work as the microbatch size, but quantization only does work if quant_bit > 0.
     n_items = models.get_microbatch_size(output[0], verify=True) if quant_bit > 0 else 0

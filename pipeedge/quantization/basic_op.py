@@ -3,8 +3,8 @@ from typing import List
 import numpy as np
 import torch
 
-def _quant_op(input_data, bit, mode='original'):
-    e=int(bit/2)
+def _quant_op(input_data, bit, e_bit,mode='original'):
+    e=int(e_bit)
     m=bit-e-1
     sign=np.sign(input_data).flatten()
     sign=np.where(sign>=0,0,1)
@@ -102,7 +102,7 @@ def compression_factor(quant_bit: torch.Tensor) -> torch.Tensor:
     return torch.div(32, quant_bit)
 
 
-def tensor_encode(input_data: torch.Tensor, quant_bit: int) -> List[torch.Tensor]:
+def tensor_encode(input_data: torch.Tensor, quant_bit: int,e_bit:int) -> List[torch.Tensor]:
     """
         The input to the encoder should be a torch.Tensor
         We first cast it to a np.array, then do everything else
@@ -116,7 +116,7 @@ def tensor_encode(input_data: torch.Tensor, quant_bit: int) -> List[torch.Tensor
     shape = input_data.shape
     
     # quant
-    m, expbias, int_map = _quant_op(input_data, quant_bit)
+    m, expbias, int_map = _quant_op(input_data, quant_bit,e_bit)
     assert 0<=m<=quant_bit-1
     comm_tensor = _intmap_encode(int_map, quant_bit,m)
     # split uint32 into 4 uint8
@@ -149,9 +149,9 @@ def tensor_decode(encodings: List[torch.Tensor]) -> torch.Tensor:
     return torch.from_numpy(orig_tensor.astype(np.float32))
 
 
-def tensor_encode_outerdim(batched_tensor: torch.Tensor, quant_bit: int) -> List[torch.Tensor]:
+def tensor_encode_outerdim(batched_tensor: torch.Tensor, quant_bit: int,e_bit:int) -> List[torch.Tensor]:
     """do quantization on each image in the micro-batched tensor with size [b,c,h,w]"""
-    list_of_lists = [tensor_encode(t, quant_bit) for t in batched_tensor]
+    list_of_lists = [tensor_encode(t, quant_bit,e_bit) for t in batched_tensor]
     encoded_tensors = list(zip(*list_of_lists))
     return [torch.stack(t,0) for t in encoded_tensors]
 

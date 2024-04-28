@@ -13,7 +13,7 @@ import model_cfg
 from evaluation_tools.evaluation_quant_test import *
 
 class ReportAccuracy():
-    def __init__(self, batch_size, output_dir, model_name, partition, quant) -> None:
+    def __init__(self, batch_size, output_dir, model_name, partition, quant,e_bit) -> None:
         self.current_acc = 0.0
         self.total_acc = 0.0
         self.correct = 0
@@ -22,6 +22,7 @@ class ReportAccuracy():
         self.output_dir = output_dir
         self.partition = partition
         self.quant = quant
+        self.e_bit=e_bit
         self.model_name = model_name.split('/')[1]
 
     def update(self, pred, target):
@@ -32,7 +33,7 @@ class ReportAccuracy():
 
     def report(self,):
         print(f"The accuracy so far is: {100*self.total_acc:.2f}")
-        file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_integer_noClamp_{self.partition[1]}.txt")
+        file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_float_e={self.e_bit}_noClamp_{self.partition[1]}.txt")
         # file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_integer_withClamp_{self.partition[1]}.txt")
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'a') as f:
@@ -81,6 +82,7 @@ def evaluation(args):
     model_name = args.model_name
     model_file = args.model_file
     num_stop_batch = args.stop_at_batch
+    e_bit=args.e_bit
     is_clamp = True
     # if model_file is None:
     #     model_file = model_cfg.get_model_default_weights_file(model_name)
@@ -120,11 +122,11 @@ def evaluation(args):
         q_bits = torch.tensor((0 if stage == 0 else stage_quant[stage - 1], stage_quant[stage]))
         model_shards.append(_make_shard(model_name, model_file, stage_layers, stage, q_bits))
         model_shards[-1].register_buffer('quant_bit', torch.tensor(stage_quant[stage]), persistent=False)
-
+        model_shards[-1].register_buffer('e_bit', torch.tensor(e_bit), persistent=False)
 
     # run inference
     start_time = time.time()
-    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, parts, stage_quant[0])
+    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, parts, stage_quant[0],e_bit)
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(val_loader):
             if batch_idx == num_stop_batch and num_stop_batch:
@@ -151,7 +153,8 @@ if __name__ == "__main__":
                              "single-node default: all layers in the model")
     parser.add_argument("-o", "--output-dir", type=str, default="result/")
     parser.add_argument("-st", "--stop-at-batch", type=int, default=None, help="the # of batch to stop evaluation")
-    
+    parser.add_argument("-e", "--e-bit", default=1, type=int,
+                        help="the number of exponential bit for the float quant")
     # Device options
     parser.add_argument("-d", "--device", type=str, default=None,
                         help="compute device type to use, with optional ordinal, "
