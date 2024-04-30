@@ -244,8 +244,8 @@ class ResNetModelShard(ModuleShard):
         logger.debug(">>>> Model name: %s", self.config.name_or_path)
         if isinstance(model_weights, str):
             logger.debug(">>>> Load weight file: %s", model_weights)
-            with np.load(model_weights) as weights:
-                self._build_shard(weights)
+            weights = torch.load(model_weights)
+            self._build_shard(weights)
         else:
             self._build_shard(model_weights)
 
@@ -360,7 +360,8 @@ class ResNetModelShard(ModuleShard):
     def save_weights(model_name: str, model_file: str) -> None:
         torch_models = getattr(models, model_name.split('/')[1])
         model = torch_models(pretrained=True)
-        torch.save(model.state_dict(), model_file)
+        # save model.state_dict() will generate a OrderedDict Object, save model will generate a ResNet Object, to compatible with loading function, need to use save(model) here
+        torch.save(model, model_file)
 
 
 class ResNet18ModelShard(ResNetModelShard):

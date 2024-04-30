@@ -5,7 +5,8 @@ import time
 import torch
 from typing import List
 from torch.utils.data import DataLoader
-from torchvision.datasets import ImageFolder
+from torchvision.datasets import ImageFolder,ImageNet
+from torchvision import transforms
 from transformers import DeiTFeatureExtractor, ViTFeatureExtractor
 from runtime import forward_hook_quant_encode, forward_pre_hook_quant_decode
 from utils.data import ViTFeatureExtractorTransforms
@@ -92,11 +93,20 @@ def evaluation(args):
                         'facebook/deit-small-distilled-patch16-224',
                         'facebook/deit-tiny-distilled-patch16-224']:
         feature_extractor = DeiTFeatureExtractor.from_pretrained(model_name)
+    elif model_name.startswith('torchvision'):
+        feature_extractor = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]),
+        # transforms.Lambda(lambda x: x.unsqueeze(0))
+        ])
+        val_dataset = ImageFolder(os.path.join(dataset_path, dataset_split),
+                                transform = feature_extractor)
     else:
         feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
-    val_transform = ViTFeatureExtractorTransforms(feature_extractor)
-    
-    val_dataset = ImageFolder(os.path.join(dataset_path, dataset_split),
+        val_transform = ViTFeatureExtractorTransforms(feature_extractor)
+        val_dataset = ImageFolder(os.path.join(dataset_path, dataset_split),
                             transform = val_transform)
     val_loader = DataLoader(
         val_dataset,
