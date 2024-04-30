@@ -111,7 +111,7 @@ END {
 
 #### Cancel all jobs (if you find some error)
 ```sh
-cancel --me
+scancel --me
 ```
 
 #### Delete all `.out` files in evaluation_tools (if you don't wanna new `.out` mixed with old file)
