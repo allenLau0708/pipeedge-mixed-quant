@@ -1,77 +1,98 @@
-### Run the code from zero
+# Setup
+- **Fork (and star) my repo**, then clone the forked version to your local machine or discovery
+- If missing any package when running the code, install it using pip or conda regularly
 
-#### Fork (and star) my repo, and then clone the forked to your local.
-#### If you miss some package when running the code, just install it in a regular way(pip or conda)
+#### Model Preparation
+- run save_model_weights.py
+```sh
+python save_model_weights.py
+```
+- If you've previously downloaded the model, delete and re-download due to modifications in this version.
+ - Ensure you successfully download `ViT-B_16-224.npz`, `ViT-L_16-224.npz`, and `resnet18.pt`.
 
-#### Run the save_model_weights.py, If you have already download the model, you need to delete and re-download it.(We make some modification in this version)
-##### make sure you at least successfully download ViT-B_16-224.npz,ViT-L_16-224.npz and resnet18.pt
+#### Dataset Preparation
+- On local: 
+	- Download the dataset from [ImageNet Large Scale Visual Recognition Challenge 2012 (ILSVRC2012) validation dataset (6.3GB)](https://www.image-net.org/challenges/LSVRC/index.php).
+  - Unzip and run `valprep.sh` on the downloaded file.
+- On Discovery
+	- modify `evaluation.py` from lines 189 to 203.
+	
+   
 
-#### download the dataset from https://www.image-net.org/challenges/LSVRC/index.php,ImageNet,Large Scale Visual Recognition Challenge 2012 (ILSVRC2012) (validation dataset, 6.3GB)
-##### unzip and run the valprep.sh to the downloaded file.
-##### If you run on discovery, you just need to modify evaluation.py from 189th line to 203th line, you don't need to do 2.and 2.1
+#### Project Structure
+- Create a folder called `result` in your project; 
+- if  `result` already exists, ensure it is empty by deleting all inside files.
+- **Your project should look like this:**
+```sh
+.
+├── ViT-B_16-224.npz
+├── ViT-L_16-224.npz
+├── resnet18.pt
+├── evaluation.py
+├── runtime.py
+├── evaluation_tools
+│   ├── evaluation_partition.sh
+│   └── upload_eval.job
+├── pipeedge
+│   ├── quantization
+│   └── others
+├── ILSVRC2012_img_val
+│   ├── n0......
+│   │   ├── (lots of).JPEG
+│   └── n0......
+├── result
+├── others
+```
+#### Clamp Control
+- manual control required for now
+- Modify `runtime.py` from lines 98 to 101.
+- Modify `evaluation.py` from lines 37 to 38.
 
-#### Create a folder called 'result' in your project, if it is existing, make sure it is empty by deleting all inside files
+####  If on Discovery 
+- Modify  `evaluation_tools/upload_eval.job` 
+	- Change `cd`  to your own path of Discovery.
+	- Choose the corresponding command for your model
+- Modify `evaluation_tools/evaluation_partition.sh`
+	- choose the corresponding command for your model
 
-#### make sure your project looks like:
+# Examples
 
-project:
-    evaluation.py
-    runtime.py
-    ViT-B_16-224.npz
-    ViT-L_16-224.npz
-    resnet18.pt
-    ILSVRC2012_img_val:
-        n0......:
-            (lots of).JPEG
-        n0......
-        (lots of)
-        n0.......
-    pipeedge:
-        others
-        quantization:
-            basic_op.py
-            others
-    result
-
-#### control the clamp or noClamp (we can't automatically control it right now)
-##### modify runtime.py from 98th line to 101th line
-##### modify evaluation.py from 37th line to 38th line
-
-#### If you run on discovery, modify the jobinfo
-##### modify evaluation_tools/upload_eval.job
-cd to your own path on discovery
-choose the corresponding command
-##### modify evaluation_tools/evaluation_partition.sh, choose the corresponding command
-
-### The example of running on local:
-Float-Quant at the 22th layer using 8 bit totally (6 bits for exponential) for resnet18 model.
-Please wait at the beginning of the running, since the program will prepossess the dataset and the model, after a while, you will see the result line by line.
-
+#### Running on Local
+- **Command**:
 ```sh
 python evaluation.py -pt 1,10,11,21 -q 8,8 -e 6 -m torchvision/resnet18
 ```
+- **Example **: Quantize at the 22nd layer using 8-bit total (6 bits for exponential) for the resnet18 model.
 
-### The example of running on discovery:
-You could see the discovery generating thousands of jobs
-They are all combinations of (bit,e,layer)
-After while,you could see some results poping up at result/{model_name}/{job_name}.txt,If you could see the txt file, basically it means the program is running successfully
+-   Note: Please wait at the beginning as the program preprocesses the dataset and model. Results will appear line by line, as well as in the `result/{model_name}/{job_info}.txt`
 
-You could also see the output at evaluation_tools/slurm_{job_id}.out
+#### Running on Discovery
 
+-   **Command**:
 ```sh
 cd evaluation_tools
 ./evaluation_partition.sh
 ```
-Note: you may need to give evaluation_partition.sh a premium system-level permission at first.
+-   You will see Discovery generating thousands of jobs.
+    -   These are combinations of (bit, e, layer).
+-   Results appear at `result/{model_name}/{job_name}.txt`. If you see the txt file, basically the program is running successfully.
+-   Outputs are also available at `evaluation_tools/slurm_{job_id}.out`.
+	- you need to check this `.out` file to check if there is any error, once you submit the job.
+- Note: You may need to give `evaluation_partition.sh` premium system-level permission first.
 
-### some useful command line
+# Useful Command Lines
 
-##### If you wanna see your job status
+#### Check all jobs Status
 ```sh
 squeue --me
 ```
 
-##### If you wanna see the counting of your running/waiting jobs
+#### Check single job status
+```sh
+jobinfo {job_id}
+```
+
+#### Count Running/Waiting Jobs
 ```sh
 squeue --me | awk '
 BEGIN {
@@ -88,3 +109,13 @@ END {
 }'
 ```
 
+#### Cancel all jobs (if you find some error)
+```sh
+cancel --me
+```
+
+#### Delete all `.out` files in evaluation_tools (if you don't wanna new `.out` mixed with old file)
+
+```sh
+find . -type f -name "*.out" -exec rm {} +
+```
