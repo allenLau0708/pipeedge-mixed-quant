@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=64GB
-#SBATCH --time=2:00:00
+#SBATCH --time=10:00:00
 #SBATCH --account=jpwalter_148
 
 # conda activate primary
