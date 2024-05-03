@@ -9,6 +9,14 @@
 
 # conda activate primary
 cd /home1/zeliliu/pipeedge/pipeedge-FloatPoint
+
+# noClamp if without "-clamp"
 # python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m google/vit-base-patch16-224
+# withClamp if adding "-clamp"
+# python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m google/vit-base-patch16-224 -clamp
+
 # python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m google/vit-large-patch16-224
+# python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m google/vit-large-patch16-224 -clamp
+
+# python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m torchvision/resnet18 -clamp
 python evaluation.py -n 32 -pt $1 -q $2,$2 -e $3 -m torchvision/resnet18

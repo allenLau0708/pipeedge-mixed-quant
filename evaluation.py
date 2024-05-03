@@ -14,7 +14,7 @@ import model_cfg
 from evaluation_tools.evaluation_quant_test import *
 
 class ReportAccuracy():
-    def __init__(self, batch_size, output_dir, model_name, partition, quant,e_bit) -> None:
+    def __init__(self, batch_size, output_dir, model_name, partition, quant,e_bit,is_Clamp) -> None:
         self.current_acc = 0.0
         self.total_acc = 0.0
         self.correct = 0
@@ -23,8 +23,23 @@ class ReportAccuracy():
         self.output_dir = output_dir
         self.partition = partition
         self.quant = quant
-        self.e_bit=e_bit
+        self.e_bit = e_bit
+        self.is_Clamp = is_Clamp
         self.model_name = model_name.split('/')[1]
+        self.file_name=""
+        # generate file path
+        if self.is_Clamp:
+            clamp_word="withClamp"
+        else:
+            clamp_word="noClamp"
+        if self.e_bit==0:
+            self.file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_integer_{clamp_word}_{self.partition[1]}.txt")
+        else:
+            self.file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_float_e={self.e_bit}_{clamp_word}_{self.partition[1]}.txt")
+        # check if the file exists, if Ture, means that we need to delete the previous result            
+        assert not os.path.exists(self.file_name),f"{self.file_name} is existed, please delete the result of previous experiment"
+        os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
+        print(self.file_name)
 
     def update(self, pred, target):
         self.correct = pred.eq(target.view(1, -1).expand_as(pred)).float().sum()
@@ -34,12 +49,9 @@ class ReportAccuracy():
 
     def report(self,):
         print(f"The accuracy so far is: {100*self.total_acc:.2f}")
-        file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_float_e={self.e_bit}_noClamp_{self.partition[1]}.txt")
-        # file_name = os.path.join(self.output_dir, self.model_name, f"b{self.quant}_integer_withClamp_{self.partition[1]}.txt")
-        os.makedirs(os.path.dirname(file_name), exist_ok=True)
-        with open(file_name, 'a') as f:
+        with open(self.file_name, 'a') as f:
             f.write(f"{100*self.total_acc:.2f}\n")
-
+                    
 def _make_shard(model_name, model_file, stage_layers, stage, q_bits):
     shard = model_cfg.module_shard_factory(model_name, model_file, stage_layers[stage][0],
                                             stage_layers[stage][1], stage)
@@ -84,7 +96,7 @@ def evaluation(args):
     model_file = args.model_file
     num_stop_batch = args.stop_at_batch
     e_bit=args.e_bit
-    is_clamp = True
+    is_Clamp = args.is_Clamp
     # if model_file is None:
     #     model_file = model_cfg.get_model_default_weights_file(model_name)
 
@@ -133,10 +145,11 @@ def evaluation(args):
         model_shards.append(_make_shard(model_name, model_file, stage_layers, stage, q_bits))
         model_shards[-1].register_buffer('quant_bit', torch.tensor(stage_quant[stage]), persistent=False)
         model_shards[-1].register_buffer('e_bit', torch.tensor(e_bit), persistent=False)
+        model_shards[-1].register_buffer('is_Clamp', torch.tensor(is_Clamp), persistent=False)
 
     # run inference
     start_time = time.time()
-    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, parts, stage_quant[0],e_bit)
+    acc_reporter = ReportAccuracy(batch_size, output_dir, model_name, parts, stage_quant[0],e_bit,is_Clamp)
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(val_loader):
             if batch_idx == num_stop_batch and num_stop_batch:
@@ -164,7 +177,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output-dir", type=str, default="result/")
     parser.add_argument("-st", "--stop-at-batch", type=int, default=None, help="the # of batch to stop evaluation")
     parser.add_argument("-e", "--e-bit", default=1, type=int,
-                        help="the number of exponential bit for the float quant")
+                        help="the number of exponential bit for the float quant, if e=0, we will use integer quant")
+    parser.add_argument("-clamp", "--is-Clamp", action='store_true',
+                        help="if we do clamp as a preprocess for data")
     # Device options
     parser.add_argument("-d", "--device", type=str, default=None,
                         help="compute device type to use, with optional ordinal, "
@@ -187,20 +202,20 @@ if __name__ == "__main__":
     
     
     # In local, use the below commented code, and check if you have already downloaded the dataset
-    dset.add_argument("--dataset-root", type=str, default= "",
-                      help="dataset root directory (e.g., for 'ImageNet', must contain "
-                           "'ILSVRC2012_devkit_t12.tar.gz' and at least one of: "
-                           "'ILSVRC2012_img_train.tar', 'ILSVRC2012_img_val.tar'")
-    dset.add_argument("--dataset-split", default='ILSVRC2012_img_val/', type=str,
-                      help="dataset split (depends on dataset), e.g.: train, val, validation, test")
-    
-    # In discovery, use the below commented code, you dont need to dowanload the dataset to the discovery.
-    # dset.add_argument("--dataset-root", type=str, default= "/project/jpwalter_148/hnwang/datasets/ImageNet/",
+    # dset.add_argument("--dataset-root", type=str, default= "",
     #                   help="dataset root directory (e.g., for 'ImageNet', must contain "
     #                        "'ILSVRC2012_devkit_t12.tar.gz' and at least one of: "
     #                        "'ILSVRC2012_img_train.tar', 'ILSVRC2012_img_val.tar'")
-    # dset.add_argument("--dataset-split", default='val', type=str,
+    # dset.add_argument("--dataset-split", default='ILSVRC2012_img_val/', type=str,
     #                   help="dataset split (depends on dataset), e.g.: train, val, validation, test")
+    
+    # In discovery, use the below commented code, you dont need to dowanload the dataset to the discovery.
+    dset.add_argument("--dataset-root", type=str, default= "/project/jpwalter_148/hnwang/datasets/ImageNet/",
+                      help="dataset root directory (e.g., for 'ImageNet', must contain "
+                           "'ILSVRC2012_devkit_t12.tar.gz' and at least one of: "
+                           "'ILSVRC2012_img_train.tar', 'ILSVRC2012_img_val.tar'")
+    dset.add_argument("--dataset-split", default='val', type=str,
+                      help="dataset split (depends on dataset), e.g.: train, val, validation, test")
     
     dset.add_argument("--dataset-indices-file", default=None, type=str,
                       help="PyTorch or NumPy file with precomputed dataset index sequence")

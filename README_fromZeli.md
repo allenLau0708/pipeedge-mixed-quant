@@ -15,7 +15,7 @@ python save_model_weights.py
 	- Download the dataset from [ImageNet Large Scale Visual Recognition Challenge 2012 (ILSVRC2012) validation dataset (6.3GB)](https://www.image-net.org/challenges/LSVRC/index.php).
   - Unzip and run `valprep.sh` on the downloaded file.
 - On Discovery
-	- modify `evaluation.py` from lines 189 to 203.
+	- modify `evaluation.py` from lines 204 to 218.
 	
    
 
@@ -43,31 +43,29 @@ python save_model_weights.py
 ├── result
 ├── others
 ```
-#### Clamp Control
-- manual control required for now
-- Modify `runtime.py` from lines 98 to 101.
-- Modify `evaluation.py` from lines 37 to 38.
 
 ####  If on Discovery 
-- Modify  `evaluation_tools/upload_eval.job` 
-	- Change `cd`  to your own path of Discovery.
-	- Choose the corresponding command for your model
-- Modify `evaluation_tools/evaluation_partition.sh`
-	- choose the corresponding command for your model
+
 
 # Examples
 
 #### Running on Local
 - **Command**:
 ```sh
-python evaluation.py -pt 1,10,11,21 -q 8,8 -e 6 -m torchvision/resnet18
+python evaluation.py -pt 1,10,11,21 -q 8,8 -e 6 -m torchvision/resnet18 -clamp
 ```
-- **Example **: Quantize at the 22nd layer using 8-bit total (6 bits for exponential) for the resnet18 model.
+- **Example **: Quantize at the 22nd layer using 8-bit total (6 bits for exponential) and clamping for the resnet18 model.
 
 -   Note: Please wait at the beginning as the program preprocesses the dataset and model. Results will appear line by line, as well as in the `result/{model_name}/{job_info}.txt`
 
 #### Running on Discovery
-
+- Modify `evaluation.py` from lines 204 to 218.
+- Delete any files inside the result!!! or it will raise error.
+- Modify  `evaluation_tools/upload_eval.job` 
+	- Change `cd`  to your own path of Discovery.
+	- Choose the corresponding command for your model
+- Modify `evaluation_tools/evaluation_partition.sh`
+	- choose the corresponding command for your model
 -   **Command**:
 ```sh
 cd evaluation_tools
