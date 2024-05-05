@@ -38,7 +38,6 @@ do
 		for pt in `seq 1 95`
 		do
 			sbatch upload_eval_clamp.job $pt $bit $e
-# 			sbatch upload_eval_noClamp.job $pt $bit $e
 		done
 	done
 done
