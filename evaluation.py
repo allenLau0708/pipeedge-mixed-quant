@@ -97,6 +97,7 @@ def evaluation(args):
     num_stop_batch = args.stop_at_batch
     e_bit=args.e_bit
     is_Clamp = args.is_Clamp
+    print(args)
     # if model_file is None:
     #     model_file = model_cfg.get_model_default_weights_file(model_name)
 
