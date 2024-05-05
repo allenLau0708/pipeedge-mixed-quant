@@ -58,7 +58,8 @@ do
 		for pt in `seq 1 20`
 		do
 			pt=$(generatePartition $pt)
-			sbatch upload_eval.job $pt $bit $e
+			sbatch upload_eval_clamp.job $pt $bit $e
+			sbatch upload_eval_noClamp.job $pt $bit $e
 		done
 	done
 done
