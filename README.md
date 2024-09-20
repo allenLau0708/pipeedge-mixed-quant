@@ -1,6 +1,11 @@
+# Mixture of Quantization (MoQ)
+
+Mixture of Quantization is an inference system that slices models and applies different quant formats for the communication of acitivation data.
+
 # Setup
 - **Fork (and star) my repo**, then clone the forked version to your local machine or discovery
 - If missing any package when running the code, install it using pip or conda regularly
+- Note that, for `transformers` package, `version=4.18.0` is highly recommended in this project.
 
 #### Model Preparation
 - run save_model_weights.py
